@@ -101,16 +101,6 @@
   shell: "authselect select sssd with-mkhomedir"
   when: ansible_os_family == 'RedHat' and sssd_conf.changed
 
-- name: "Comment out lines that should no longer be used for auth"
-  ansible.builtin.replace:
-    path: /etc/pam.d/common-auth
-    regexp: "{{ item.regexp }}"
-    replace: "{{ item.val }}"
-  with_items:
-    - { regexp: "^(auth.*\[.*\].*pam_unix.so nullok)",        val: "#\1" }
-    - { regexp: "^(auth.*\[.*\].*pam_sss.so use_first_pass)", val: "#\1" }
-  when: ansible_os_family == 'Debian'
-
 - name: "Fix common-auth to work with IDP"
   ansible.builtin.blockinfile:
     path: /etc/pam.d/common-auth
@@ -122,6 +112,16 @@
       auth  [default=1 ignore=ignore success=ok]  pam_usertype.so isregular
       auth  sufficient          pam_sss.so forward_pass
     marker: "# {mark} ANSIBLE MANAGED BLOCK -- SSSD IDP SUPPORT"
+  when: ansible_os_family == 'Debian'
+
+- name: "Comment out lines that should no longer be used for auth"
+  ansible.builtin.replace:
+    path: /etc/pam.d/common-auth
+    regexp: "{{ item.regexp }}"
+    replace: "{{ item.val }}"
+  with_items:
+    - { "regexp": '^(auth.*\[.*\].*pam_unix.so nullok)',        "val": '#\1' }
+    - { "regexp": '^(auth.*\[.*\].*pam_sss.so use_first_pass)', "val": '#\1' }
   when: ansible_os_family == 'Debian'
 
 - name: "Install /etc/krb5.keytab"
