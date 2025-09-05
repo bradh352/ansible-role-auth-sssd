@@ -1,0 +1,8 @@
+TLS_CACERT /etc/pki/sssd_cacert.pem
+{% serverlist=[] %}
+{% for server in auth_sssd_servers %}
+{%   list.append("ldaps://" ~ server) %}
+{% endfor %}
+URI {{ serverlist | join(" ") }}
+BASE {{ auth_sssd_search_base }}
+BINDDN {{ auth_sssd_binddn }}

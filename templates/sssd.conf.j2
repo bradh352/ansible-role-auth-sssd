@@ -1,0 +1,45 @@
+{% set domain=(inventory_hostname | split("."))[1:] | join(".") %}
+[domain/{{ domain }}]
+id_provider = ldap
+auth_provider = krb5
+chpass_provider = krb5
+access_provider = ldap
+cache_credentials = True
+enumerate = True
+{% serverlist=[] %}
+{% for server in auth_sssd_servers %}
+{%   list.append("ldaps://" ~ server) %}
+{% endfor %}
+ldap_uri = {{ serverlist | join(", ") }}
+ldap_tls_cacert = /etc/pki/sssd_cacert.pem
+ldap_search_base = {{ auth_sssd_search_base }}
+krb5_server = {{ auth_sssd_servers | join(", ") }}
+krb5_realm = {{ auth_sssd_realm }}
+krb5_use_fast = demand
+krb5_fast_use_anonymous_pkinit = True
+krb5_store_password_if_offline = True
+ldap_schema = IPA
+ldap_default_bind_dn = {{ auth_sssd_binddn }}
+ldap_default_authtok = {{ auth_sssd_bindpass }}
+ldap_access_filter = (objectClass=*)
+
+[sssd]
+services = nss, pam, ssh, sudo
+domains = {{ domain }}
+
+[nss]
+homedir_substring = /home
+
+[pam]
+
+[sudo]
+
+[autofs]
+
+[ssh]
+
+[pac]
+
+[ifp]
+
+[session_recording]

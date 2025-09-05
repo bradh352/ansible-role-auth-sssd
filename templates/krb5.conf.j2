@@ -1,0 +1,32 @@
+{% set domain=(inventory_hostname | split("."))[1:] | join(".") %}
+includedir /etc/krb5.conf.d/
+
+[libdefaults]
+  default_realm = {{ auth_sssd_realm }}
+  dns_lookup_realm = false
+  rdns = false
+  dns_canonicalize_hostname = false
+  dns_lookup_kdc = true
+  ticket_lifetime = 24h
+  forwardable = true
+  udp_preference_limit = 0
+  default_ccache_name = KEYRING:persistent:%{uid}
+  spake_preauth_groups = edwards25519
+
+[realms]
+  {{ auth_sssd_realm }} = {
+{% for server in auth_sssd_servers %}
+    kdc = {{ server }}:88
+    master_kdc = {{ server }}:88
+    admin_server = {{ server }}:749
+    kpasswd_server = {{ server }}:464
+{% endfor %}
+    default_domain = {{ domain }}
+    pkinit_anchors = FILE:/etc/pki/sssd_cacert.pem
+    pkinit_pool = FILE:/etc/pki/sssd_cacert.pem
+  }
+
+[domain_realm]
+  .{{ domain }} = {{ auth_sssd_realm }}
+  {{ domain }} = {{ auth_sssd_realm }}
+  {{ inventory_hostname }} = {{ auth_sssd_realm }}

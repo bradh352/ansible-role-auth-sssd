@@ -1,0 +1,136 @@
+---
+- name: "APT: install SSSD and dependencies"
+  ansible.builtin.apt:
+    pkg:
+      - sssd
+      - sssd-ipa
+      - sssd-idp
+      - sssd-tools
+      - sssd-kcm
+      - sssd-passkey
+      - krb5-user
+      - krb5-pkinit
+    state: present
+  when: ansible_os_family == 'Debian'
+
+- name: "DNF: install FreeIPA Client"
+  ansible.builtin.dnf:
+    name:
+      - sssd
+      - sssd-ipa
+      - sssd-idp
+      - sssd-tools
+      - sssd-kcm
+      - sssd-passkey
+      - krb5-workstation
+      - krb5-pkinit
+      - oddjob-mkhomedir
+    state: present
+  when: ansible_os_family == 'RedHat'
+
+- name: "Fix up paths in sssd idp support"
+  ansible.builtin.replace:
+    path: /etc/krb5.conf.d/sssd_enable_idp
+    regexp: "/lib64/"
+    replace: "/lib/x86_64-linux-gnu/"
+  when: ansible_os_family == 'Debian'
+
+- name: See if ca certificate is already installed
+  stat:
+    path: /etc/pki/sssd_cacert.pem
+  register: sssd_cacert
+
+- name: Download ca certificate to control node
+  ansible.builtin.get_url:
+    url: "{{ auth_sssd_cacert_url }}"
+    dest: "/tmp/sssd_cacert.pem"
+  delegate_to: localhost
+  changed_when: false
+  run_once: true
+  when: not sssd_cacert.stat.exists
+
+- name: Install cacert
+  copy:
+    src: /tmp/sssd_cacert.pem
+    dest: /etc/pki/sssd_cacert.pem
+    mode: 0644
+    owner: root
+  when: not sssd_cacert.stat.exists
+
+- name: krb5.conf
+  template:
+    src: krb5.conf.j2
+    dest: /etc/krb5.conf
+    owner: root
+    mode: 0644
+
+- name: ldap.conf
+  template:
+    src: ldap.conf.j2
+    dest: /etc/ldap/ldap.conf
+    owner: root
+    mode: 0644
+
+- name: sssd.conf
+  template:
+    src: sssd.conf.j2
+    dest: /etc/sssd/sssd.conf
+    owner: root
+    mode: 0600
+  register: sssd_conf
+  notify: sssd_restart
+
+- name: Enable sssd
+  service:
+    name: sssd
+    enabled: true
+    state: started
+
+- name: Enable oddjob
+  service:
+    name: oddjob
+    enabled: true
+    state: started
+  when: ansible_os_family == 'RedHat'
+
+- name: "Debian: Configure PAM"
+  shell: "pam-auth-update --enable sss mkhomedir"
+  when: ansible_os_family == 'Debian' and sssd_conf.changed
+
+- name: "Redhat: Configure PAM"
+  shell: "authselect select sssd with-mkhomedir"
+  when: ansible_os_family == 'RedHat' and sssd_conf.changed
+
+- name: "Comment out lines that should no longer be used for auth"
+  ansible.builtin.replace:
+    path: /etc/pam.d/common-auth
+    regexp: "{{ item.regexp }}"
+    replace: "{{ item.val }}"
+  with_items:
+    - { regexp: "^(auth.*\[.*\].*pam_unix.so nullok)",        val: "#\1" }
+    - { regexp: "^(auth.*\[.*\].*pam_sss.so use_first_pass)", val: "#\1" }
+  when: ansible_os_family == 'Debian'
+
+- name: "Fix common-auth to work with IDP"
+  ansible.builtin.blockinfile:
+    path: /etc/pam.d/common-auth
+    insertbefore: '^#*auth.*\[.*\].*pam_unix.so nullok'
+    block: |
+      auth  [default=1 ignore=ignore success=ok]  pam_usertype.so isregular
+      auth  [default=1 ignore=ignore success=ok]  pam_localuser.so
+      auth  sufficient          pam_unix.so nullok
+      auth  [default=1 ignore=ignore success=ok]  pam_usertype.so isregular
+      auth  sufficient          pam_sss.so forward_pass
+    marker: "# {mark} ANSIBLE MANAGED BLOCK -- SSSD IDP SUPPORT"
+  when: ansible_os_family == 'Debian'
+
+- name: "Install /etc/krb5.keytab"
+  copy:
+    dest: /etc/krb5.keytab
+    content: "{{ auth_sssd_host_keytab | b64decode }}"
+    owner: root
+    mode: 0600
+  when: auth_sssd_host_keytab is defined
+
+- name: Flush Handlers
+  ansible.builtin.meta: flush_handlers
