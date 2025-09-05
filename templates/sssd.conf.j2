@@ -6,9 +6,9 @@ chpass_provider = krb5
 access_provider = ldap
 cache_credentials = True
 enumerate = True
-{% serverlist=[] %}
+{% set serverlist=[] %}
 {% for server in auth_sssd_servers %}
-{%   list.append("ldaps://" ~ server) %}
+{%   do serverlist.append("ldaps://" ~ server) %}
 {% endfor %}
 ldap_uri = {{ serverlist | join(", ") }}
 ldap_tls_cacert = /etc/pki/sssd_cacert.pem

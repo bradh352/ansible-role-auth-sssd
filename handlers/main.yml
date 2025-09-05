@@ -3,3 +3,8 @@
   service:
     name: sssd
     state: restarted
+
+- name: sshd_restart
+  service:
+    name: "{{ 'ssh' if ansible_os_family == 'Debian' else 'sshd' }}"
+    state: restarted
