@@ -1,4 +1,4 @@
-# Authentication Enrollment for FreeIPA Role
+# Authentication Enrollment for Kerberos and LDAP via SSSD
 
 Author: Brad House<br/>
 License: MIT<br/>
