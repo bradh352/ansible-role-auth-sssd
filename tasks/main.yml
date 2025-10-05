@@ -51,6 +51,10 @@
   run_once: true
   when: not sssd_cacert.stat.exists
 
+- name: "Set Domain"
+  set_fact:
+    domain: "{{ (inventory_hostname | split('.''))[1:] | join('.'') }}"
+
 - name: Install cacert
   copy:
     src: /tmp/sssd_cacert.pem
@@ -126,6 +130,26 @@
     - { "regexp": '^(auth.*\[.*\].*pam_sss.so use_first_pass)', "val": '#\1' }
   when: ansible_os_family == 'Debian'
 
+- name: "Make sure sssd enumerate is enabled and sudo can use kerberos"
+  community.general.ini_file:
+    path: /etc/sssd/sssd.conf
+    section: "domain/{{ domain }}"
+    option: "{{ item.key }}"
+    value: "{{ item.value }}"
+  with_items:
+    - { "key": "enumerate",           "value": "True" }
+    - { "key": "pam_gssapi_services", "value": "sudo, sudo-i" }
+  notify: restart_sssd
+
+- name: "sudo allow gssapi auth"
+  lineinfile:
+    path: "/etc/pam.d/{{ item }}"
+    line: "auth sufficient pam_sss_gss.so"
+    insertbefore: "{{ '^auth.*system-auth.*' if ansible_os_family == 'RedHat' else '@include common-auth' }}"
+  with_items:
+    - "sudo"
+    - "sudo-i"
+
 - name: "Install /etc/krb5.keytab"
   copy:
     dest: /etc/krb5.keytab
@@ -133,14 +157,6 @@
     owner: root
     mode: 0600
   when: auth_sssd_host_keytab is defined
-
-# When using OAUTH2 IDP SSH requires KbdInteractiveAuthentication
-- name: "SSH Requires KbdInteractiveAuthentication=yes"
-  lineinfile:
-    path: /etc/ssh/sshd_config
-    regexp: '^#?KbdInteractiveAuthentication'
-    line: "KbdInteractiveAuthentication yes"
-  notify: sshd_restart
 
 - name: Flush Handlers
   ansible.builtin.meta: flush_handlers
