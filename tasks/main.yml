@@ -53,7 +53,7 @@
 
 - name: "Set Domain"
   set_fact:
-    domain: "{{ (inventory_hostname | split('.''))[1:] | join('.'') }}"
+    domain: "{{ (inventory_hostname | split('.'))[1:] | join('.') }}"
 
 - name: Install cacert
   copy:

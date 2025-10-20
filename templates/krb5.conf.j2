@@ -8,6 +8,7 @@ includedir /etc/krb5.conf.d/
   dns_canonicalize_hostname = false
   dns_lookup_kdc = true
   ticket_lifetime = 24h
+  renew_lifetime = 7d
   forwardable = true
   udp_preference_limit = 0
   default_ccache_name = KEYRING:persistent:%{uid}
