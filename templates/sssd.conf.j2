@@ -21,6 +21,7 @@ ldap_schema = IPA
 ldap_default_bind_dn = {{ auth_sssd_binddn }}
 ldap_default_authtok = {{ auth_sssd_bindpass }}
 ldap_access_filter = (objectClass=*)
+ldap_user_ssh_public_key = ipaSshPubKey
 
 [sssd]
 services = nss, pam, ssh, sudo

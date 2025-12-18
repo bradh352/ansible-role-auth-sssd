@@ -10,6 +10,7 @@
       - sssd-passkey
       - krb5-user
       - krb5-pkinit
+      - kstart
     state: present
   when: ansible_os_family == 'Debian'
 
