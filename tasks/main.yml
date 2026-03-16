@@ -106,11 +106,12 @@
     dest: /usr/share/pam-configs/ipa
     owner: root
     mode: 0644
+  register: pam_auth_update
   when: ansible_os_family == 'Debian'
 
 - name: "Debian: Configure PAM"
   ansible.builtin.command: "pam-auth-update --disable sss sss-smart-card-optional sss-smart-card-required --enable ipa mkhomedir"
-  when: ansible_os_family == 'Debian' and sssd_conf.changed
+  when: ansible_os_family == 'Debian' and pam_auth_update.changed
 
 - name: "Redhat: Configure PAM"
   ansible.builtin.command: "authselect select sssd with-mkhomedir"
