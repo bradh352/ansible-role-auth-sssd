@@ -110,7 +110,7 @@
   when: ansible_os_family == 'Debian'
 
 - name: "Debian: Configure PAM"
-  ansible.builtin.command: "pam-auth-update --disable sss sss-smart-card-optional sss-smart-card-required --enable ipa mkhomedir"
+  ansible.builtin.command: "pam-auth-update --disable sss sss-smart-card-optional sss-smart-card-required --enable ipa mkhomedir --force"
   when: ansible_os_family == 'Debian' and pam_auth_update.changed
 
 - name: "Redhat: Configure PAM"
