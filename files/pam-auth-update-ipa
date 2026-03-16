@@ -1,0 +1,33 @@
+Name: IPA authentication
+Default: yes
+Priority: 512
+Conflicts: sss, sss-smart-card-optional, sss-smart-card-required
+Auth-Type: Primary
+Auth:
+	sufficient				pam_sss_gss.so
+	[default=1 ignore=ignore success=ok]	pam_usertype.so isregular
+	[default=1 ignore=ignore success=ok]	pam_localuser.so
+	sufficient				pam_unix.so nullok
+	[default=1 ignore=ignore success=ok]	pam_usertype.so isregular
+	sufficient				pam_sss.so forward_pass
+Auth-Initial:
+	sufficient				pam_sss_gss.so
+	[default=1 ignore=ignore success=ok]	pam_usertype.so isregular
+	[default=1 ignore=ignore success=ok]	pam_localuser.so
+	sufficient				pam_unix.so nullok
+	[default=1 ignore=ignore success=ok]	pam_usertype.so isregular
+	sufficient				pam_sss.so forward_pass
+Account-Type: Additional
+Account:
+	sufficient				pam_localuser.so
+	[default=bad success=ok user_unknown=ignore]	pam_sss.so
+Password-Type: Primary
+Password:
+	sufficient				pam_sss.so use_authtok
+Password-Initial:
+	sufficient				pam_sss.so
+Session-Type: Additional
+Session:
+	optional				pam_sss.so
+
+
