@@ -106,16 +106,32 @@
     dest: /usr/share/pam-configs/ipa
     owner: root
     mode: 0644
-  register: pam_auth_update
+  register: pam_auth_update_ipa
   when: ansible_os_family == 'Debian'
 
-- name: "Debian: Configure PAM"
-  ansible.builtin.command: "pam-auth-update --disable sss sss-smart-card-optional sss-smart-card-required --enable ipa mkhomedir --force"
-  when: ansible_os_family == 'Debian' and pam_auth_update.changed
+- name: "Debian: Install access control pam-auth-update module"
+  copy:
+    src: pam-auth-update-access
+    dest: /usr/share/pam-configs/access
+    owner: root
+    mode: 0644
+  register: pam_auth_update_access
+  when: ansible_os_family == 'Debian'
+
+- name: "Debian: Disable sss module and enable ipa and access modules"
+  ansible.builtin.command: "pam-auth-update --disable sss sss-smart-card-optional sss-smart-card-required --enable ipa access mkhomedir --force"
+  when: ansible_os_family == 'Debian' and (pam_auth_update_ipa.changed or pam_auth_update_access.changed)
 
 - name: "Redhat: Configure PAM"
   ansible.builtin.command: "authselect select sssd with-mkhomedir"
   when: ansible_os_family == 'RedHat' and sssd_conf.changed
+
+- name: "Redhat: Enable pam access module"
+  lineinfile:
+    path: "/etc/pam.d/system-auth"
+    line: "account required                  pam_access.so"
+    insertbefore: "^account.*"
+  when: ansible_os_family == 'RedHat'
 
 - name: "Make sure sssd enumerate is enabled and sudo can use kerberos"
   community.general.ini_file:
