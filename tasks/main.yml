@@ -131,7 +131,7 @@
   with_items:
     - { "key": "enumerate", "value": "True" }
     - { "key": "pam_gssapi_services", "value": "sudo, sudo-i" }
-  notify: restart_sssd
+  notify: sssd_restart
 
 - name: "Redhat: sudo allow gssapi auth"
   lineinfile:
