@@ -1,4 +1,4 @@
-[domain/{{ domain }}]
+[domain/{{ auth_sssd_domain }}]
 id_provider = ldap
 auth_provider = krb5
 chpass_provider = krb5
@@ -22,10 +22,11 @@ ldap_default_bind_dn = {{ auth_sssd_binddn }}
 ldap_default_authtok = {{ auth_sssd_bindpass }}
 ldap_access_filter = (objectClass=*)
 ldap_user_ssh_public_key = ipaSshPubKey
+pam_gssapi_services = sudo, sudo-i
 
 [sssd]
 services = nss, pam, ssh, sudo
-domains = {{ domain }}
+domains = {{ auth_sssd_domain }}
 
 [nss]
 homedir_substring = /home

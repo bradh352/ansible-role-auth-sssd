@@ -118,17 +118,6 @@
     insertbefore: "^account.*"
   when: ansible_os_family == 'RedHat'
 
-- name: "Make sure sssd enumerate is enabled and sudo can use kerberos"
-  community.general.ini_file:
-    path: /etc/sssd/sssd.conf
-    section: "domain/{{ auth_sssd_domain }}"
-    option: "{{ item.key }}"
-    value: "{{ item.value }}"
-  with_items:
-    - { "key": "enumerate", "value": "True" }
-    - { "key": "pam_gssapi_services", "value": "sudo, sudo-i" }
-  notify: sssd_restart
-
 - name: "Redhat: sudo allow gssapi auth"
   lineinfile:
     path: "/etc/pam.d/{{ item }}"

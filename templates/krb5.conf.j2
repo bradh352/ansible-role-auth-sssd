@@ -22,7 +22,7 @@ includedir /etc/krb5.conf.d/
     admin_server = {{ server }}:749
     kpasswd_server = {{ server }}:464
 {% endfor %}
-    default_domain = {{ domain }}
+    default_domain = {{ auth_sssd_domain }}
     pkinit_anchors = FILE:/etc/pki/sssd_cacert.pem
     pkinit_pool = FILE:/etc/pki/sssd_cacert.pem
   }
@@ -30,4 +30,8 @@ includedir /etc/krb5.conf.d/
 [domain_realm]
   .{{ domain }} = {{ auth_sssd_realm }}
   {{ domain }} = {{ auth_sssd_realm }}
+{% if domain != auth_sssd_domain %}
+  {{ auth_sssd_domain }} = {{ auth_sssd_realm }}
+  .{{ auth_sssd_domain }} = {{ auth_sssd_realm }}
+{% endif %}
   {{ inventory_hostname }} = {{ auth_sssd_realm }}
