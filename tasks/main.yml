@@ -49,10 +49,6 @@
     mode: "0644"
   when: not sssd_cacert.stat.exists
 
-- name: "Set Domain"
-  ansible.builtin.set_fact:
-    domain: "{{ (inventory_hostname | split('.'))[1:] | join('.') }}"
-
 - name: krb5.conf
   ansible.builtin.template:
     src: krb5.conf.j2
@@ -125,7 +121,7 @@
 - name: "Make sure sssd enumerate is enabled and sudo can use kerberos"
   community.general.ini_file:
     path: /etc/sssd/sssd.conf
-    section: "domain/{{ domain }}"
+    section: "domain/{{ auth_sssd_domain }}"
     option: "{{ item.key }}"
     value: "{{ item.value }}"
   with_items:
@@ -150,6 +146,16 @@
     owner: root
     mode: "0600"
   when: auth_sssd_host_keytab is defined
+
+- name: "configure ssh to allow sssd authorized keys and kbd interactive auth"
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "^#?{{ item.key }} .*"
+    line: "{{ item.key }} {{ item.val }}"
+  with_items:
+    - { key: "AuthorizedKeysCommand",     val: "/usr/bin/sss_ssh_authorizedkeys" }
+    - { key: "AuthorizedKeysCommandUser", val: "nobody" }
+    - { key: "KbdInteractiveAuthentication", val: "yes" }
 
 - name: Flush Handlers
   ansible.builtin.meta: flush_handlers
