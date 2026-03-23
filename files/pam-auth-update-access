@@ -1,0 +1,7 @@
+Name: Access control
+Default: yes
+Priority: 910
+Account-Type: Primary
+Account:
+	required			pam_access.so
+
