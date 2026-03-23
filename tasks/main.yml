@@ -44,25 +44,14 @@
 - name: Download ca certificate to control node
   ansible.builtin.get_url:
     url: "{{ auth_sssd_cacert_url }}"
-    dest: "/tmp/sssd_cacert.pem"
+    dest: "/etc/pki/sssd_cacert.pem"
     validate_certs: false
-  delegate_to: localhost
-  changed_when: false
-  become: false
-  run_once: true
+    mode: "0644"
   when: not sssd_cacert.stat.exists
 
 - name: "Set Domain"
   ansible.builtin.set_fact:
     domain: "{{ (inventory_hostname | split('.'))[1:] | join('.') }}"
-
-- name: Install cacert
-  ansible.builtin.copy:
-    src: /tmp/sssd_cacert.pem
-    dest: /etc/pki/sssd_cacert.pem
-    mode: "0644"
-    owner: root
-  when: not sssd_cacert.stat.exists
 
 - name: krb5.conf
   ansible.builtin.template:
