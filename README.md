@@ -23,7 +23,7 @@ group `all` vars.
   names and not include ldap:// or ldaps:// prefixes or ports.
 * `auth_sssd_realm`: Kerberos Realm.  All uppercase.
 * `auth_sssd_domain`: Domain for instance.  E.g. `testenv.bradhouse.dev`
-* `auth_sssd_search_base`: Search base. E.g. `dc=testenv,dc=bradhouse,dc=dev`
+* `auth_sssd_search_base`: Search base. E.g. `cn=accounts,dc=testenv,dc=bradhouse,dc=dev`
 * `auth_sssd_binddn`: Bind DN. E.g. `uid=bind,cn=sysaccounts,cn=etc,dc=testenv,dc=bradhouse,dc=dev`
 * `auth_sssd_bindpass`: Bind Password associated with Bind DN.  Typically should
   be stored in the vault.
