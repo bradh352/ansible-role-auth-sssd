@@ -86,20 +86,20 @@
   when: ansible_facts['os_family'] == 'RedHat'
 
 - name: "Debian: Install IPA pam-auth-update module"
-  copy:
+  ansible.builtin.copy:
     src: pam-auth-update-ipa
     dest: /usr/share/pam-configs/ipa
     owner: root
-    mode: 0644
+    mode: "0644"
   register: pam_auth_update_ipa
   when: ansible_facts['os_family'] == 'Debian'
 
 - name: "Debian: Install access control pam-auth-update module"
-  copy:
+  ansible.builtin.copy:
     src: pam-auth-update-access
     dest: /usr/share/pam-configs/access
     owner: root
-    mode: 0644
+    mode: "0644"
   register: pam_auth_update_access
   when: ansible_facts['os_family'] == 'Debian'
 
@@ -112,14 +112,14 @@
   when: ansible_facts['os_family'] == 'RedHat' and sssd_conf.changed
 
 - name: "Redhat: Enable pam access module"
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: "/etc/pam.d/system-auth"
     line: "account required                  pam_access.so"
     insertbefore: "^account.*"
   when: ansible_facts['os_family'] == 'RedHat'
 
 - name: "Redhat: sudo allow gssapi auth"
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: "/etc/pam.d/{{ item }}"
     line: "auth sufficient pam_sss_gss.so"
     insertbefore: "^auth.*system-auth.*"
@@ -137,12 +137,12 @@
   when: auth_sssd_host_keytab is defined
 
 - name: "configure ssh to allow sssd authorized keys and kbd interactive auth"
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /etc/ssh/sshd_config
     regexp: "^#?{{ item.key }} .*"
     line: "{{ item.key }} {{ item.val }}"
   with_items:
-    - { key: "AuthorizedKeysCommand",     val: "/usr/bin/sss_ssh_authorizedkeys" }
+    - { key: "AuthorizedKeysCommand", val: "/usr/bin/sss_ssh_authorizedkeys" }
     - { key: "AuthorizedKeysCommandUser", val: "nobody" }
     - { key: "KbdInteractiveAuthentication", val: "yes" }
 
