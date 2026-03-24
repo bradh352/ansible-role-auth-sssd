@@ -12,7 +12,7 @@
       - krb5-pkinit
       - kstart
     state: present
-  when: ansible_os_family == 'Debian'
+  when: ansible_facts['os_family'] == 'Debian'
 
 - name: "DNF: install FreeIPA Client"
   ansible.builtin.dnf:
@@ -27,14 +27,14 @@
       - krb5-pkinit
       - oddjob-mkhomedir
     state: present
-  when: ansible_os_family == 'RedHat'
+  when: ansible_facts['os_family'] == 'RedHat'
 
 - name: "Fix up paths in sssd idp support"
   ansible.builtin.replace:
     path: /etc/krb5.conf.d/sssd_enable_idp
     regexp: "/lib64/"
     replace: "/lib/x86_64-linux-gnu/"
-  when: ansible_os_family == 'Debian'
+  when: ansible_facts['os_family'] == 'Debian'
 
 - name: See if ca certificate is already installed
   ansible.builtin.stat:
@@ -83,7 +83,7 @@
     name: oddjob
     enabled: true
     state: started
-  when: ansible_os_family == 'RedHat'
+  when: ansible_facts['os_family'] == 'RedHat'
 
 - name: "Debian: Install IPA pam-auth-update module"
   copy:
@@ -92,7 +92,7 @@
     owner: root
     mode: 0644
   register: pam_auth_update_ipa
-  when: ansible_os_family == 'Debian'
+  when: ansible_facts['os_family'] == 'Debian'
 
 - name: "Debian: Install access control pam-auth-update module"
   copy:
@@ -101,22 +101,22 @@
     owner: root
     mode: 0644
   register: pam_auth_update_access
-  when: ansible_os_family == 'Debian'
+  when: ansible_facts['os_family'] == 'Debian'
 
 - name: "Debian: Disable sss module and enable ipa and access modules"
   ansible.builtin.command: "pam-auth-update --disable sss sss-smart-card-optional sss-smart-card-required --enable ipa access mkhomedir --force"
-  when: ansible_os_family == 'Debian' and (pam_auth_update_ipa.changed or pam_auth_update_access.changed)
+  when: ansible_facts['os_family'] == 'Debian' and (pam_auth_update_ipa.changed or pam_auth_update_access.changed)
 
 - name: "Redhat: Configure PAM"
   ansible.builtin.command: "authselect select sssd with-mkhomedir"
-  when: ansible_os_family == 'RedHat' and sssd_conf.changed
+  when: ansible_facts['os_family'] == 'RedHat' and sssd_conf.changed
 
 - name: "Redhat: Enable pam access module"
   lineinfile:
     path: "/etc/pam.d/system-auth"
     line: "account required                  pam_access.so"
     insertbefore: "^account.*"
-  when: ansible_os_family == 'RedHat'
+  when: ansible_facts['os_family'] == 'RedHat'
 
 - name: "Redhat: sudo allow gssapi auth"
   lineinfile:
@@ -126,7 +126,7 @@
   with_items:
     - "sudo"
     - "sudo-i"
-  when: ansible_os_family == 'RedHat'
+  when: ansible_facts['os_family'] == 'RedHat'
 
 - name: "Install /etc/krb5.keytab"
   ansible.builtin.copy:
