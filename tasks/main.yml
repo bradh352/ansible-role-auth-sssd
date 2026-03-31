@@ -145,6 +145,27 @@
     - { key: "AuthorizedKeysCommand", val: "/usr/bin/sss_ssh_authorizedkeys" }
     - { key: "AuthorizedKeysCommandUser", val: "nobody" }
     - { key: "KbdInteractiveAuthentication", val: "yes" }
+  notify: sshd_restart
+
+- name: "Limit system access"
+  ansible.builtin.template:
+    src: access.conf.j2
+    dest: /etc/security/access.conf
+    mode: "644"
+  when: auth_sssd_access is defined
+
+- name: "setup sudoers"
+  ansible.builtin.template:
+    src: sudoers.j2
+    dest: /etc/sudoers.d/sss-sudoers
+    mode: "600"
+  when: auth_sssd_sudoers is defined
+
+- name: "make sure cloudinit sudoers no longer exists"
+  ansible.builtin.file:
+    path: /etc/sudoers.d/90-cloud-init-users
+    state: absent
+  when: auth_sssd_sudoers is defined
 
 - name: Flush Handlers
   ansible.builtin.meta: flush_handlers

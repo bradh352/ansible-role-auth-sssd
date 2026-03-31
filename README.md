@@ -29,5 +29,11 @@ group `all` vars.
   be stored in the vault.
 * `auth_sssd_host_keytab`: Optional. Base64-encoded host keytab data to install as
   `/etc/krb5.keytab`.
-
-
+* `auth_sssd_access`: Optional. List of usernames and groups that are allowed to
+  access this host.
+* `auth_sssd_sudoers`: Optional.  Mark users with sudo permissions.  List of
+  dictionaries.
+   - `name`: Required.  Username or Group Name.  May be the keyword `ALL` to
+     allow all users regardless of group membership.
+   - `is_group`: Optional. Boolean. Defaults to `false`.
+   - `require_password`: Optional. Boolean. Defaults to `true`.
