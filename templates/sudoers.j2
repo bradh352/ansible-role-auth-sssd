@@ -1,0 +1,12 @@
+{% for entry in auth_sssd_sudoers %}
+{%   if entry.is_group|default(false) %}
+{%     set name='%' ~ entry.name %}
+{%   else %}
+{%     set name=entry.name %}
+{%   endif %}
+{%   set nopasswd="" %}
+{%   if not entry.require_password|default(true) %}
+{%     set nopasswd=" NOPASSWD:" %}
+{%   endif %}
+{{ name }} ALL=(ALL:ALL){{ nopasswd }} ALL
+{% endfor %}
